@@ -123,6 +123,13 @@ html,body{overscroll-behavior:none}
 @keyframes fl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-40px) scale(1.15)}}
 #mbe{position:absolute;left:50%;top:50%;font-size:46vmin;line-height:1;opacity:.07;transform:translate(-50%,-50%)}
 .menu{position:relative;z-index:1}
+:root{--bs:58px}
+#boost,#pwr{width:var(--bs);height:var(--bs);bottom:calc(var(--sab) + 18px);left:auto;font-size:24px;right:calc(max(12px,env(safe-area-inset-right)) + 4px)}
+@media(pointer:coarse){#pwr{right:calc(max(12px,env(safe-area-inset-right)) + 74px)}}
+body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-left)) + 108px)}
+@media(pointer:coarse){body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 178px)}}
+#mm{right:auto;left:max(12px,env(safe-area-inset-left));bottom:calc(var(--sab) + 14px)}
+#bar{bottom:calc(var(--sab) + 116px)}#pw{bottom:calc(var(--sab) + 134px)}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
@@ -142,7 +149,7 @@ html,body{overscroll-behavior:none}
 <div class="lb">Tu nombre</div>
 <input id="nm" maxlength="12" placeholder="Tu nombre" autocomplete="off">
 <div class="lb">Elige tu animal</div>
-<div id="tabs"></div><div id="sw"></div>
+<div id="tabs"></div><div id="sw"></div><button class="sm sdb" id="sd" style="margin-top:6px"></button>
 </div>
 <div class="card" id="right">
 <div id="rbody"><div id="an"></div>
@@ -156,7 +163,7 @@ html,body{overscroll-behavior:none}
 
 <div id="adov"><div class="adbox"><p>Anuncio</p><div class="adslot">Aquí irá tu anuncio</div><button class="sm" id="adx">Espera</button> <button class="sm" id="adc">Cancelar</button></div></div>
 <div id="toast"></div>
-<div id="pov"><div class="card"><h1>Pausa</h1><p>El juego está detenido.</p><button class="sm buy" id="pgo">Continuar</button></div></div>
+<div id="pov"><div class="card"><h1>Pausa</h1><p>El juego está detenido.</p><button class="sm sdb" style="margin-bottom:8px;width:100%"></button><button class="sm buy" id="pgo">Continuar</button></div></div>
 <div id="rot"><div>📱<p>Gira el teléfono en horizontal para jugar</p></div></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -899,6 +906,10 @@ function unpause(){if(!paused)return;paused=false;pov.style.display='none';last=
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 addEventListener('pagehide',pause);
 {const m=$('mbg');for(let i=0;i<14;i++){const e=document.createElement('i'),r=6+Math.random()*14;e.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${r}px;height:${r}px;background:hsl(${Math.random()*360} 90% 65%);animation-duration:${5+Math.random()*6}s;animation-delay:-${Math.random()*8}s`;m.appendChild(e)}}
+let side='r';try{side=localStorage.getItem('sa_side')||'r'}catch(e){}
+function applySide(){document.body.classList.toggle('sl',side==='l');document.querySelectorAll('.sdb').forEach(b=>b.textContent='🎮 Botones: '+(side==='l'?'izquierda':'derecha'))}
+document.querySelectorAll('.sdb').forEach(b=>b.onclick=()=>{side=side==='l'?'r':'l';try{localStorage.setItem('sa_side',side)}catch(e){}applySide()});
+applySide();
 $('pz').onclick=pause;$('pgo').onclick=unpause;
 reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
