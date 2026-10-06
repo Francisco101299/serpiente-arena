@@ -130,6 +130,18 @@ body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-le
 @media(pointer:coarse){body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 178px)}}
 #mm{right:auto;left:max(12px,env(safe-area-inset-left));bottom:calc(var(--sab) + 14px)}
 #bar{bottom:calc(var(--sab) + 116px)}#pw{bottom:calc(var(--sab) + 134px)}
+#sp{position:fixed;inset:0;z-index:25;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(120% 90% at 50% 0%,#2a1d52 0%,#140f26 60%,#0b0817 100%);padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;text-align:center}
+#sp h2{margin:0 0 2px;font-size:22px;color:var(--acc)}
+#sp p{margin:0 0 10px;font-size:13px;color:var(--mut)}
+.sd2{display:flex;gap:14px;justify-content:center}
+.tl{background:var(--pan);border:3px solid transparent;border-radius:16px;padding:10px;color:var(--ink);font:700 14px 'Baloo 2',sans-serif;cursor:pointer}
+.tl.on{border-color:var(--acc);background:rgba(255,184,77,.15)}
+.tl small{display:block;font-weight:500;color:var(--mut);font-size:11px;margin-top:2px}
+.ph{position:relative;width:190px;height:88px;margin-bottom:6px;border:3px solid rgba(255,255,255,.35);border-radius:14px;background:#140f26}
+.ph i{position:absolute;bottom:10px;width:32px;height:32px;border:2px dashed rgba(255,255,255,.45);border-radius:50%}
+.ph b{position:absolute;bottom:10px;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#2a1a00;font-size:13px;display:flex;align-items:center;justify-content:center}
+.ph.L i{right:14px}.ph.L b:nth-of-type(1){left:12px}.ph.L b:nth-of-type(2){left:44px}
+.ph.R i{left:14px}.ph.R b:nth-of-type(1){right:12px}.ph.R b:nth-of-type(2){right:44px}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
@@ -149,7 +161,7 @@ body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-le
 <div class="lb">Tu nombre</div>
 <input id="nm" maxlength="12" placeholder="Tu nombre" autocomplete="off">
 <div class="lb">Elige tu animal</div>
-<div id="tabs"></div><div id="sw"></div><button class="sm sdb" id="sd" style="margin-top:6px"></button>
+<div id="tabs"></div><div id="sw"></div>
 </div>
 <div class="card" id="right">
 <div id="rbody"><div id="an"></div>
@@ -163,6 +175,10 @@ body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-le
 
 <div id="adov"><div class="adbox"><p>Anuncio</p><div class="adslot">Aquí irá tu anuncio</div><button class="sm" id="adx">Espera</button> <button class="sm" id="adc">Cancelar</button></div></div>
 <div id="toast"></div>
+<div id="sp"><h2>¿De qué lado quieres los botones?</h2><p>Toca una opción: el otro pulgar mueve la serpiente (arrastra en cualquier parte).</p>
+<div class="sd2"><button class="tl" data-s="l"><div class="ph L"><i></i><b>⚡</b><b class="ae"></b></div>Izquierda<small>Pulgar izquierdo: botones</small></button>
+<button class="tl" data-s="r"><div class="ph R"><i></i><b>⚡</b><b class="ae"></b></div>Derecha<small>Pulgar derecho: botones</small></button></div>
+<button class="sm" id="spb" style="margin-top:10px">Volver</button></div>
 <div id="pov"><div class="card"><h1>Pausa</h1><p>El juego está detenido.</p><button class="sm sdb" style="margin-bottom:8px;width:100%"></button><button class="sm buy" id="pgo">Continuar</button></div></div>
 <div id="rot"><div>📱<p>Gira el teléfono en horizontal para jugar</p></div></div>
 <script>
@@ -250,14 +266,15 @@ function reset(){
   for(let i=0;i<40;i++)snakes.push(mk(NAMES[i],AKEYS[(i*7)%AKEYS.length],true));
   while(orbs.length<900)orbs.push(newOrb());
 }
-function start(){
+function start(){if(!owned(skin))return;au();showSide()}
+function startGame(){
   if(!owned(skin))return;
   au();
   reset();
   me=mk(($('nm').value.trim()||'Tú'),skin,false);
   snakes.push(me);state='play';paused=false;document.body.classList.add('pl');cam.x=me.segs[0].x;cam.y=me.segs[0].y;$('ov').classList.add('off');
   {const A=ANIMALS[skin];toast(`Toca ${A.e} o pulsa E → ${A.pn}: ${A.pd}`,7000)}
-  try{if(matchMedia('(pointer:coarse)').matches){Promise.resolve(document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}}catch(e){}
+  
 }
 let AC=null,MG=null,REV=null,muted=false,musOn=true;
 try{muted=localStorage.getItem('sa_mute')==='1';musOn=localStorage.getItem('sa_mus')!=='0'}catch(e){}
@@ -910,6 +927,9 @@ let side='r';try{side=localStorage.getItem('sa_side')||'r'}catch(e){}
 function applySide(){document.body.classList.toggle('sl',side==='l');document.querySelectorAll('.sdb').forEach(b=>b.textContent='🎮 Botones: '+(side==='l'?'izquierda':'derecha'))}
 document.querySelectorAll('.sdb').forEach(b=>b.onclick=()=>{side=side==='l'?'r':'l';try{localStorage.setItem('sa_side',side)}catch(e){}applySide()});
 applySide();
+function showSide(){document.querySelectorAll('#sp .ae').forEach(e=>e.textContent=ANIMALS[skin].e);document.querySelectorAll('.tl').forEach(t=>t.classList.toggle('on',t.dataset.s===side));$('sp').style.display='flex'}
+document.querySelectorAll('.tl').forEach(t=>t.onclick=()=>{side=t.dataset.s;try{localStorage.setItem('sa_side',side)}catch(e){}applySide();$('sp').style.display='none';startGame()});
+$('spb').onclick=()=>{$('sp').style.display='none'};
 $('pz').onclick=pause;$('pgo').onclick=unpause;
 reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
