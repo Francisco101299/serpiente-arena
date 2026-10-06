@@ -142,6 +142,17 @@ body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-le
 .ph b{position:absolute;bottom:10px;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#2a1a00;font-size:13px;display:flex;align-items:center;justify-content:center}
 .ph.L i{right:14px}.ph.L b:nth-of-type(1){left:12px}.ph.L b:nth-of-type(2){left:44px}
 .ph.R i{left:14px}.ph.R b:nth-of-type(1){right:12px}.ph.R b:nth-of-type(2){right:44px}
+#mpb{position:fixed;left:50%;top:calc(var(--sat) + 8px);transform:translateX(-50%);width:36px;height:36px;border:0;border-radius:50%;background:var(--pan);font-size:17px;opacity:.55;display:none;padding:0}
+#mpb::after{content:'';position:absolute;inset:-6px}
+body.pl #mpb{display:block}
+body.mp #mpb{opacity:1;box-shadow:0 0 0 2px var(--acc)}
+#mm{display:none;left:50%;right:auto;transform:translateX(-50%);top:calc(var(--sat) + 50px);bottom:auto}
+body.mp #mm{display:block}
+#toast{top:auto;bottom:calc(var(--sab) + 50px)}
+#pw{left:50%;transform:translateX(-50%);bottom:calc(var(--sab) + 14px)}
+#bar{bottom:calc(var(--sab) + 14px)}
+body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px);bottom:calc(var(--sab) + 36px)}
+@media(pointer:coarse){body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 74px)}}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
@@ -154,6 +165,7 @@ body.sl #boost,body.sl #pwr{right:auto;left:calc(max(12px,env(safe-area-inset-le
 <button id="snd" aria-label="Sonido">🔊</button>
 <button id="mus" aria-label="Música">🎵</button>
 <button id="pz" aria-label="Pausa">⏸</button>
+<button id="mpb" aria-label="Mapa">🗺️</button>
 <div id="ov"><div id="mbg"><div id="mbe"></div></div><div class="menu">
 <div class="card" id="left">
 <h1 id="ttl">Serpiente Arena</h1>
@@ -250,7 +262,7 @@ const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rad=s=>7+Math.min(14,Math.sqrt(s.mass)*.8);
-let foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
+let mapOn=false,foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
 try{best=+localStorage.getItem('sa_best')||0}catch(e){}
 const mouse={x:0,y:0,has:false};
 function rpos(m){const a=rnd(0,6.283),d=Math.sqrt(Math.random())*(R-m);return{x:Math.cos(a)*d,y:Math.sin(a)*d}}
@@ -770,7 +782,7 @@ function draw(t){
   const i=BARI;
   if(me){const lab=me.pcd>0?String(Math.ceil(me.pcd)):ANIMALS[me.an].e;if(pwr.dataset.l!==lab){pwr.dataset.l=lab;pwr.textContent=lab}pwr.style.opacity=me.pcd>0?.45:1}
   if(me){i.style.transform='scaleX('+(me.st/100).toFixed(2)+')';i.style.background=me.cool?'#ff5d8f':'#ffb84d'}
-  mmc.clearRect(0,0,96,96);
+  if(!mapOn)return;mmc.clearRect(0,0,96,96);
   const k=44/R;
   mmc.strokeStyle='rgba(255,93,143,.7)';mmc.lineWidth=2;mmc.beginPath();mmc.arc(48,48,46,0,6.283);mmc.stroke();
   for(const s of snakes){
@@ -930,6 +942,10 @@ applySide();
 function showSide(){document.querySelectorAll('#sp .ae').forEach(e=>e.textContent=ANIMALS[skin].e);document.querySelectorAll('.tl').forEach(t=>t.classList.toggle('on',t.dataset.s===side));$('sp').style.display='flex'}
 document.querySelectorAll('.tl').forEach(t=>t.onclick=()=>{side=t.dataset.s;try{localStorage.setItem('sa_side',side)}catch(e){}applySide();$('sp').style.display='none';startGame()});
 $('spb').onclick=()=>{$('sp').style.display='none'};
+try{mapOn=localStorage.getItem('sa_map')==='1'}catch(e){}
+function applyMap(){document.body.classList.toggle('mp',mapOn)}
+$('mpb').onclick=()=>{mapOn=!mapOn;try{localStorage.setItem('sa_map',mapOn?'1':'0')}catch(e){}applyMap()};
+applyMap();
 $('pz').onclick=pause;$('pgo').onclick=unpause;
 reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
