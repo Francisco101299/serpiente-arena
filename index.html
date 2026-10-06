@@ -566,6 +566,43 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
   #sw b span{width:36px;height:36px;font-size:22px !important}
   #pv{height:70px !important}
 }
+
+/* ===== MENU V4: refinamiento visual (solo CSS; sin tocar lógica) ===== */
+.menu .card{backdrop-filter:none!important}
+#ov{padding:max(8px,var(--sat)) max(10px,env(safe-area-inset-right)) max(8px,var(--sab)) max(10px,env(safe-area-inset-left))!important}
+#pv{object-fit:contain;background:radial-gradient(ellipse 70% 90% at 50% 100%,rgba(255,180,63,.20),transparent 70%),radial-gradient(ellipse at 50% 0,rgba(128,102,255,.22),transparent 70%),rgba(5,4,14,.6)!important}
+#right #pd br{display:none}
+#right #pd::before{content:'HABILIDAD';display:block;margin-bottom:5px;color:#8f7aff;font:800 9px/1 system-ui,sans-serif;letter-spacing:.18em}
+#right #pd b{display:block;margin-bottom:3px;color:var(--v3-orange)!important;font-size:15px!important;letter-spacing:.07em;text-transform:uppercase}
+#right #pd small{margin-top:7px!important;padding:5px 0 5px 9px;border-left:2px solid var(--v3-orange);background:linear-gradient(90deg,rgba(255,180,63,.08),transparent);color:#b9b3cf!important;font-size:11px}
+@media(max-height:560px) and (orientation:landscape){
+.menu{width:100%!important;height:100%!important;gap:8px!important}
+.menu .card{border-radius:18px!important}
+#left{padding:10px 12px!important;flex:1.1 1 0!important}
+#right{padding:10px 12px!important}
+.brand-kicker{display:none!important}
+#left h1{font-size:clamp(15px,2.3vw,19px)!important;white-space:nowrap}
+#left h1:after{margin:5px 0 3px!important;width:52px;height:2px}
+#left #sub{margin:0 0 4px!important;font-size:11px!important}
+.section-head{margin:4px 0 3px!important}
+.section-head span{width:17px;height:17px;font-size:8px}
+#nm{height:32px!important;margin:0 0 4px!important;font-size:13px!important}
+#tabs{padding:1px 1px 5px!important}
+#tabs b{padding:5px 10px!important;font-size:11px!important}
+#sw{display:grid!important;grid-auto-flow:column;grid-template-rows:repeat(2,1fr)!important;grid-template-columns:none!important;grid-auto-columns:64px;overflow-x:auto;gap:5px!important;flex:1 1 0;min-height:0;max-height:none!important;margin:0!important;scrollbar-width:none}
+#sw b{min-height:0!important;padding:3px 2px!important;font-size:9.5px!important;justify-content:center;overflow:hidden}
+#sw b span{width:30px!important;height:30px!important;font-size:20px!important}
+#an{font-size:19px!important}
+#pv{height:58px!important;width:100%!important}
+#chips{margin:0 0 6px!important}
+#right #pd{font-size:11px!important}
+#right .hint{display:none!important}
+#go{height:42px;padding:0!important;font-size:18px!important}
+}
+@media(max-width:720px) and (orientation:portrait){
+#right #go{position:fixed!important;left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:calc(var(--sab) + 10px);width:auto!important;z-index:6;box-shadow:0 10px 30px rgba(255,160,40,.35),0 0 0 6px rgba(8,7,20,.7)!important}
+#ov{padding-bottom:84px!important}
+}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
