@@ -1,8 +1,14 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.serpiente_arena.twa",
-        "sha256_cert_fingerprints": ["E0:26:A4:D4:CE:DC:0B:2E:80:C1:8A:4C:DF:7E:24:B2:FF:A3:97:4C:1D:9D:BF:A3:C7:18:F1:57:66:D3:D0:35"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.serpiente_arena.twa",
+      "sha256_cert_fingerprints": [
+        "69:40:AD:31:0E:2E:D3:A2:8F:99:FA:9C:59:89:1D:32:9A:EE:67:DE:DB:2A:52:4D:32:8D:BC:0E:D3:CE:1A:40"
+      ]
+    }
+  }
+]
