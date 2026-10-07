@@ -1,7 +1,22 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><title>Serpiente Arena</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#140f26"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
+<meta name="theme-color" content="#140f26"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous" data-adbreak-test="on"></script>
+<script>
+/* AdSense H5 Games Ads. Cambia ca-pub-XXXXXXXXXXXXXXXX por tu ID y QUITA data-adbreak-test="on" al publicar. */
+window.adsbygoogle=window.adsbygoogle||[];
+var adBreak=adConfig=function(o){adsbygoogle.push(o)};
+adConfig({sound:'on'});
+window.__adsShow=function(done){
+  var got=false,t=setTimeout(function(){if(!got)window.toast&&toast('No hay anuncio disponible ahora. Intenta más tarde.',3000)},6000);
+  adBreak({type:'reward',name:'unlock-animal',
+    beforeReward:function(show){got=true;clearTimeout(t);show()},
+    adViewed:function(){done()},
+    adDismissed:function(){},
+    adBreakDone:function(i){clearTimeout(t);if(!got&&i&&i.breakStatus!=='viewed'&&i.breakStatus!=='dismissed')window.toast&&toast('No hay anuncio disponible ahora. Intenta más tarde.',3000)}});
+};
+</script>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#140f26;--ink:#f4efff;--mut:#a79bc9;--acc:#ffb84d;--pan:rgba(20,15,38,.74);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
@@ -651,7 +666,7 @@ const LQ={l:0,e:16,tm:0,f30:false};
 let W,H,DPR;
 function rs(){DPR=Math.min(devicePixelRatio||1,[2,1.5,1.25,1.25][LQ.l]);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
 let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(rs,120)});rs();
-const PROD=false,ADS={secs:15,show:null},BARI=document.querySelector('#bar i'),R=2600,SP=7;
+const PROD=false,ADS={secs:15,show:window.__adsShow||null},BARI=document.querySelector('#bar i'),R=2600,SP=7;
 const GROUPS={ter:'Terrestres',acu:'Acuáticos',ins:'Insectos',exo:'Exóticos',leg:'Legendarios'};
 const ANIMALS={};
 [
