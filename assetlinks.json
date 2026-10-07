@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.serpiente_arena.twa",
-        "sha256_cert_fingerprints": ["69:40:AD:31:0E:2E:D3:A2:8F:99:FA:9C:59:89:1D:32:9A:EE:67:DE:DB:2A:52:4D:32:8D:BC:0E:D3:CE:1A:40"]
-      }
-    }]
