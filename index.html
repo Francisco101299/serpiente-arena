@@ -1447,6 +1447,9 @@ function payNow(){
   sc.onload=draw;sc.onerror=()=>{$('ppm').textContent='No se pudo cargar el pago. Revisa tu conexión.'};document.head.appendChild(sc);
 }
 $('ppx').onclick=()=>{$('pp').style.display='none'};
+/* CÓDIGO TEMPORAL DE PRUEBA: escríbelo en el campo de nombre para desbloquear todos los animales. BÓRRALO antes de publicar. */
+const DEVCODE='FPGC0808';
+$('nm').addEventListener('input',()=>{if($('nm').value.trim().toUpperCase()===DEVCODE){if(!unl.includes('todos'))unl.push('todos');try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('nm').value='';build();toast('¡Todos los animales desbloqueados!',3000)}});
 $('pz').onclick=pause;$('pgo').onclick=unpause;
 reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
