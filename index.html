@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><title>Serpiente Arena</title>
+<html lang="es"><head><meta charset="utf-8"><title>Super Serpientes</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#140f26"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3563709125050200" crossorigin="anonymous" data-adbreak-test="on"></script>
 <script>
@@ -640,7 +640,7 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 <div id="ov"><a id="pvl" href="privacy.html" target="_blank" rel="noopener">Política de privacidad</a><div id="mbg"><div id="mbe"></div></div><div class="menu">
 <div class="card" id="left">
 <div class="brand-kicker">ARENA • WILDLIFE DUEL</div>
-<h1 id="ttl">S E R P I E N T E <span>ARENA</span></h1>
+<h1 id="ttl">S U P E R <span>SERPIENTES</span></h1>
 <p id="sub">Come • Crece • Sobrevive</p>
 <div class="section-head"><span>01</span><b>JUGADOR</b></div><div class="lb">Tu nombre</div>
 <input id="nm" maxlength="12" placeholder="Tu nombre" autocomplete="off">
@@ -1438,7 +1438,7 @@ function payNow(){
   const val=parseFloat(pr.replace(/[^0-9.]/g,'')).toFixed(2);
   $('ppt').textContent=A.e+' '+A.n+' · '+pr;$('ppm').textContent='';$('pp').style.display='flex';
   const draw=()=>{$('ppb').innerHTML='';paypal.Buttons({
-    createOrder:(d,a)=>a.order.create({purchase_units:[{description:'Serpiente Arena: '+A.n,amount:{currency_code:'USD',value:val}}]}),
+    createOrder:(d,a)=>a.order.create({purchase_units:[{description:'Super Serpientes: '+A.n,amount:{currency_code:'USD',value:val}}]}),
     onApprove:(d,a)=>a.order.capture().then(()=>{if(!unl.includes(k))unl.push(k);try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('pp').style.display='none';build();toast('¡Compra lista! '+A.n+' desbloqueado',3000)}),
     onError:()=>{$('ppm').textContent='No se pudo completar el pago. Intenta de nuevo.'}
   }).render('#ppb')};
