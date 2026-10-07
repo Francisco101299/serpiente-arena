@@ -618,6 +618,7 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 #right #go{position:fixed!important;left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:calc(var(--sab) + 10px);width:auto!important;z-index:6;box-shadow:0 10px 30px rgba(255,160,40,.35),0 0 0 6px rgba(8,7,20,.7)!important}
 #ov{padding-bottom:84px!important}
 }
+#pvl{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:2;font:600 9px/8px system-ui,sans-serif;color:#7b7599;text-decoration:none;padding:0 6px 0}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
@@ -631,7 +632,7 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 <button id="mus" aria-label="Música">🎵</button>
 <button id="pz" aria-label="Pausa">⏸</button>
 <button id="mpb" aria-label="Mapa">🗺️</button>
-<div id="ov"><div id="mbg"><div id="mbe"></div></div><div class="menu">
+<div id="ov"><a id="pvl" href="privacy.html" target="_blank" rel="noopener">Política de privacidad</a><div id="mbg"><div id="mbe"></div></div><div class="menu">
 <div class="card" id="left">
 <div class="brand-kicker">ARENA • WILDLIFE DUEL</div>
 <h1 id="ttl">S E R P I E N T E <span>ARENA</span></h1>
