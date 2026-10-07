@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.serpiente_arena.twa",
-        "sha256_cert_fingerprints": ["75:37:01:27:D6:A3:CE:41:1C:37:5E:44:34:1C:D8:A1:7E:9A:89:37:59:C1:22:26:B2:85:BA:35:87:5C:27:8D"]
+        "sha256_cert_fingerprints": ["69:40:AD:31:0E:2E:D3:A2:8F:99:FA:9C:59:89:1D:32:9A:EE:67:DE:DB:2A:52:4D:32:8D:BC:0E:D3:CE:1A:40"]
       }
     }]
