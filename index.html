@@ -619,6 +619,11 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 #ov{padding-bottom:84px!important}
 }
 #pvl{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:2;font:600 9px/8px system-ui,sans-serif;color:#7b7599;text-decoration:none;padding:0 6px 0}
+#rv,#pp{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(10,7,22,.88);overflow:auto;padding:10px}
+#rv .card,#pp .card{width:min(340px,100%);max-height:none;overflow:visible}
+#rv .sm,#pp .sm{width:100%;margin-top:6px}
+#toast{z-index:40}
+#cd,#rd{display:none!important}
 </style></head><body>
 <canvas id="g"></canvas>
 <div class="hud" id="score"></div>
@@ -652,6 +657,8 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 </div><button id="go">Jugar</button>
 </div></div></div>
 
+<div id="rv"><div class="card"><h1 style="font-size:24px">Te eliminaron</h1><p>¿Quieres seguir donde estabas?</p><button class="sm buy" id="rva">📺 Ver anuncio y seguir (quedan <span id="rvn">2</span>)</button><button class="sm" id="rvr">Reiniciar</button></div></div>
+<div id="pp"><div class="card"><h1 style="font-size:22px">Pagar</h1><p id="ppt"></p><div id="ppb" style="min-height:110px"></div><p id="ppm" style="font-size:12px"></p><button class="sm" id="ppx">Cancelar</button></div></div>
 <div id="adov"><div class="adbox"><p>Anuncio</p><div class="adslot">Aquí irá tu anuncio</div><button class="sm" id="adx">Espera</button> <button class="sm" id="adc">Cancelar</button></div></div>
 <div id="toast"></div>
 <div id="sp"><h2>¿De qué lado quieres los botones?</h2><p>Toca una opción: el otro pulgar mueve la serpiente (arrastra en cualquier parte).</p>
@@ -729,7 +736,7 @@ const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rad=s=>7+Math.min(14,Math.sqrt(s.mass)*.8);
-let mapOn=false,foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
+let rvLeft=0,mapOn=false,foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
 try{best=+localStorage.getItem('sa_best')||0}catch(e){}
 const mouse={x:0,y:0,has:false};
 function rpos(m){const a=rnd(0,6.283),d=Math.sqrt(Math.random())*(R-m);return{x:Math.cos(a)*d,y:Math.sin(a)*d}}
@@ -751,7 +758,7 @@ function startGame(){
   au();
   reset();
   me=mk(($('nm').value.trim()||'Tú'),skin,false);
-  snakes.push(me);state='play';paused=false;document.body.classList.add('pl');cam.x=me.segs[0].x;cam.y=me.segs[0].y;$('ov').classList.add('off');
+  snakes.push(me);state='play';paused=false;rvLeft=2;document.body.classList.add('pl');cam.x=me.segs[0].x;cam.y=me.segs[0].y;$('ov').classList.add('off');
   {const A=ANIMALS[skin];toast(`Toca ${A.e} o pulsa E → ${A.pn}: ${A.pd}`,7000)}
   
 }
@@ -913,7 +920,7 @@ function kill(s,by){
   if(s===me){shake=14;setTimeout(end,700)}
 }
 function score(s){return Math.max(0,Math.floor((s.mass-10)*10))}
-function end(){
+function end(){if(rvLeft>0&&showRevive())return;
   state='dead';document.body.classList.remove('pl');const sc=score(me);
   if(sc>best){best=sc;try{localStorage.setItem('sa_best',best)}catch(e){}}
   $('ttl').textContent='Te eliminaron';
@@ -1374,6 +1381,7 @@ $('buy').onclick=()=>{
   const u=SHOP[skin]||SHOP[ANIMALS[skin].tier];if(u)window.open(u,'_blank','noopener');
   else $('lm').textContent='El pago aún no está activo. Si ya tienes un código, escríbelo abajo.';
 };
+$('buy').onclick=payNow;
 $('rd').onclick=()=>{
   const ok=redeem($('cd').value);$('cd').value='';build();
   if(ok)$('pd').insertAdjacentHTML('afterbegin','<b>¡Desbloqueado!</b><br>');else $('lm').textContent='Código no válido';
@@ -1413,6 +1421,32 @@ try{mapOn=localStorage.getItem('sa_map')==='1'}catch(e){}
 function applyMap(){document.body.classList.toggle('mp',mapOn)}
 $('mpb').onclick=()=>{mapOn=!mapOn;try{localStorage.setItem('sa_map',mapOn?'1':'0')}catch(e){}applyMap()};
 applyMap();
+function showRevive(){if(PROD&&!ADS.show)return false;paused=true;$('rvn').textContent=rvLeft;$('rv').style.display='flex';return true}
+function doRevive(){
+  rvLeft--;$('rv').style.display='none';
+  const h=me.segs[0],hx=h.x,hy=h.y,m=Math.hypot(hx,hy);
+  if(m>R-60){const k=(R-300)/m,dx=hx*(k-1),dy=hy*(k-1);for(const q of me.segs){q.x+=dx;q.y+=dy}me.a=Math.atan2(-hy,-hx);me.ta=me.a}
+  me.alive=true;me.shield=Math.max(me.shield||0,4);me.boost=false;
+  cam.x=me.segs[0].x;cam.y=me.segs[0].y;paused=false;last=performance.now();
+}
+$('rva').onclick=()=>{if(ADS.show)ADS.show(doRevive);else if(!PROD)doRevive()};
+$('rvr').onclick=()=>{$('rv').style.display='none';rvLeft=0;paused=false;end()};
+const PAYPAL_ID='PON_AQUI_TU_CLIENT_ID_DE_PAYPAL';
+function payNow(){
+  const k=skin,A=ANIMALS[k],pr=PRICE[A.tier];
+  if(!pr||PAYPAL_ID.indexOf('PON_')===0){$('lm').textContent='El pago aún no está activo.';return}
+  const val=parseFloat(pr.replace(/[^0-9.]/g,'')).toFixed(2);
+  $('ppt').textContent=A.e+' '+A.n+' · '+pr;$('ppm').textContent='';$('pp').style.display='flex';
+  const draw=()=>{$('ppb').innerHTML='';paypal.Buttons({
+    createOrder:(d,a)=>a.order.create({purchase_units:[{description:'Serpiente Arena: '+A.n,amount:{currency_code:'USD',value:val}}]}),
+    onApprove:(d,a)=>a.order.capture().then(()=>{if(!unl.includes(k))unl.push(k);try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('pp').style.display='none';build();toast('¡Compra lista! '+A.n+' desbloqueado',3000)}),
+    onError:()=>{$('ppm').textContent='No se pudo completar el pago. Intenta de nuevo.'}
+  }).render('#ppb')};
+  if(window.paypal)return draw();
+  const sc=document.createElement('script');sc.src='https://www.paypal.com/sdk/js?client-id='+PAYPAL_ID+'&currency=USD&components=buttons';
+  sc.onload=draw;sc.onerror=()=>{$('ppm').textContent='No se pudo cargar el pago. Revisa tu conexión.'};document.head.appendChild(sc);
+}
+$('ppx').onclick=()=>{$('pp').style.display='none'};
 $('pz').onclick=pause;$('pgo').onclick=unpause;
 reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
