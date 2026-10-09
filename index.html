@@ -722,7 +722,7 @@ AKEYS.forEach(k=>{const A=ANIMALS[k];A.free=START.slice(0,4).includes(k);A.tier=
 const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','Duna','Bruno','Luna','Sol','Max','Tana','Kiko','Nube','Rocco','Mica','Gato','Flor','Toro','Zorro','Pipa','Lola','Vito','Coco','Nina','Rufo','Bola','Tuco','Yara','Cheto','Mimi','Ñoño','Pancho','Lupe','Taco','Jazz','Dino'];
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const rad=s=>7+Math.min(14,Math.sqrt(s.mass)*.8);
+const rad=s=>7+Math.min(70,Math.sqrt(s.mass)*.8);
 let rvLeft=0,mapOn=false,foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
 try{best=+localStorage.getItem('sa_best')||0}catch(e){}
 const mouse={x:0,y:0,has:false};
@@ -846,7 +846,8 @@ function step(s,dt){
   if(s.slow>0)sp*=.5;
   const g=s.segs,h=g[0];
   h.x+=Math.cos(s.a)*sp*dt;h.y+=Math.sin(s.a)*sp*dt;
-  for(let i=1;i<g.length;i++){const p=g[i-1],q=g[i],dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy);if(d>SP){const f=(d-SP)/d;q.x+=dx*f;q.y+=dy*f}}
+  const gs=Math.max(SP,rad(s)*.25);
+  for(let i=1;i<g.length;i++){const p=g[i-1],q=g[i],dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy);if(d>gs){const f=(d-gs)/d;q.x+=dx*f;q.y+=dy*f}}
   const n=Math.min(240,10+Math.floor(s.mass*.8));
   while(g.length<n){const t=g[g.length-1];g.push({x:t.x,y:t.y})}
   while(g.length>n+2)g.pop();
