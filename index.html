@@ -821,9 +821,9 @@ const SHOP={std:'',leg:''}; // enlace de pago por nivel; puedes añadir uno por 
 const PRICE={std:'US$1',leg:'US$3'};
 const SALT='serpiente-arena-2026';
 function hc(s){let h=5381;for(const ch of s)h=((h<<5)+h+ch.charCodeAt(0))>>>0;return h.toString(36).toUpperCase()}
-let unl=[],adUnl=[];
+let unl=[],adUnl=[],verifiedPurchases=[];
 try{unl=JSON.parse(localStorage.getItem('sa_unl')||'[]')}catch(e){}
-const owned=k=>!ANIMALS[k].pro||unl.includes(k)||unl.includes('todos')||unl.includes('g:'+ANIMALS[k].g)||adUnl.includes(k);
+const owned=k=>!ANIMALS[k].pro||verifiedPurchases.includes(k)||adUnl.includes(k);
 function redeem(code){
   code=code.trim().toUpperCase();let ok=false;
   const add=x=>{if(!unl.includes(x))unl.push(x);ok=true};
@@ -1421,26 +1421,32 @@ function doRevive(){
 }
 $('rva').onclick=()=>{if(ADS.show)ADS.show(doRevive);else if(!PROD)doRevive()};
 $('rvr').onclick=()=>{$('rv').style.display='none';rvLeft=0;paused=false;end()};
-const PAYPAL_ID='PON_AQUI_TU_CLIENT_ID_DE_PAYPAL';
+const PAYPAL_ID='BAAPQuFS9YbVvDWlrQ1HcgeGrUQo6oyMslnNxxPsTAP834VOyZ_QcigQqsGNZTxIqr1fq4s4OjGC5xNatk';
+let ppScriptLoading=false;
+async function restoreEntitlements(){
+  let tokens=[];try{tokens=JSON.parse(localStorage.getItem('sa_paytokens')||'[]')}catch(e){}
+  const valid=[];
+  for(const token of tokens){try{const r=await fetch('/api/paypal/verify-entitlement',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});if(r.ok){const d=await r.json();if(d.valid&&typeof d.animal==='string'&&!valid.includes(d.animal))valid.push(d.animal)}}catch(e){}}
+  verifiedPurchases=valid;
+}
 function payNow(){
-  const k=skin,A=ANIMALS[k],pr=PRICE[A.tier];
-  if(!pr||PAYPAL_ID.indexOf('PON_')===0){$('lm').textContent='El pago aún no está activo.';return}
-  const val=parseFloat(pr.replace(/[^0-9.]/g,'')).toFixed(2);
-  $('ppt').textContent=A.e+' '+A.n+' · '+pr;$('ppm').textContent='';$('pp').style.display='flex';
+  const k=skin,A=ANIMALS[k];
+  if(!A||A.tier!=='leg'){ $('lm').textContent='Solo las serpientes legendarias se pueden comprar aquí.';return; }
+  $('ppt').textContent=A.e+' '+A.n+' · US$3.00';$('ppm').textContent='';$('pp').style.display='flex';
   const draw=()=>{$('ppb').innerHTML='';paypal.Buttons({
-    createOrder:(d,a)=>a.order.create({purchase_units:[{description:'Super Serpientes: '+A.n,amount:{currency_code:'USD',value:val}}]}),
-    onApprove:(d,a)=>a.order.capture().then(()=>{if(!unl.includes(k))unl.push(k);try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('pp').style.display='none';build();toast('¡Compra lista! '+A.n+' desbloqueado',3000)}),
+    createOrder:()=>fetch('/api/paypal/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.id)throw new Error(d.error||'No se pudo crear la orden');return d.id}),
+    onApprove:(data)=>fetch('/api/paypal/capture-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID,animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.token)throw new Error(d.error||'No se pudo verificar el pago');let tokens=[];try{tokens=JSON.parse(localStorage.getItem('sa_paytokens')||'[]')}catch(e){}if(!tokens.includes(d.token))tokens.push(d.token);try{localStorage.setItem('sa_paytokens',JSON.stringify(tokens))}catch(e){}if(!verifiedPurchases.includes(k))verifiedPurchases.push(k);$('pp').style.display='none';build();toast('¡Compra confirmada! '+A.n+' desbloqueado',3000)}).catch(e=>{$('ppm').textContent=e.message||'No se pudo verificar el pago. Contacta con soporte si PayPal ya te cobró.'}),
+    onCancel:()=>{$('ppm').textContent='Compra cancelada. No se realizó el desbloqueo.'},
     onError:()=>{$('ppm').textContent='No se pudo completar el pago. Intenta de nuevo.'}
   }).render('#ppb')};
   if(window.paypal)return draw();
-  const sc=document.createElement('script');sc.src='https://www.paypal.com/sdk/js?client-id='+PAYPAL_ID+'&currency=USD&components=buttons';
-  sc.onload=draw;sc.onerror=()=>{$('ppm').textContent='No se pudo cargar el pago. Revisa tu conexión.'};document.head.appendChild(sc);
+  if(ppScriptLoading)return;
+  ppScriptLoading=true;const sc=document.createElement('script');sc.src='https://www.paypal.com/sdk/js?client-id='+encodeURIComponent(PAYPAL_ID)+'&currency=USD&components=buttons';
+  sc.onload=()=>{ppScriptLoading=false;draw()};sc.onerror=()=>{ppScriptLoading=false;$('ppm').textContent='No se pudo cargar PayPal. Revisa tu conexión.'};document.head.appendChild(sc);
 }
 $('ppx').onclick=()=>{$('pp').style.display='none'};
-/* CÓDIGO TEMPORAL DE PRUEBA: escríbelo en el campo de nombre para desbloquear todos los animales. BÓRRALO antes de publicar. */
-const DEVCODE='FPGC0808';
-$('nm').addEventListener('input',()=>{if($('nm').value.trim().toUpperCase()===DEVCODE){if(!unl.includes('todos'))unl.push('todos');try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('nm').value='';build();toast('¡Todos los animales desbloqueados!',3000)}});
+/* Se eliminó el código temporal que desbloqueaba todos los animales. */
 $('pz').onclick=pause;$('pgo').onclick=unpause;
-reset();requestAnimationFrame(loop);
+restoreEntitlements().finally(()=>{reset();requestAnimationFrame(loop)});
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
