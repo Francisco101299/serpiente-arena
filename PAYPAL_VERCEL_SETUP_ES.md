@@ -21,3 +21,14 @@ Esta versión prepara un flujo de Checkout con creación y captura de órdenes e
 - El token de desbloqueo firmado se guarda en el navegador. Como no hay base de datos ni cuenta de jugador, las compras no se sincronizan automáticamente entre dispositivos/navegadores. Para recuperar compras o sincronizarlas, se necesita persistencia en servidor y un identificador de jugador.
 - Este paquete no se ha desplegado en tu cuenta de Vercel ni se ha probado con un cobro real; configura las variables y verifica el flujo antes de producción.
 - La lista de productos autorizados en las funciones actualmente es `dragon`, `fenix`, `unicornio`, `hidra`, `kraken`, `yeti`, `sirena`, `fantasma`, `golem` y `vampiro`. Si agregas nuevos animales legendarios a `index.html`, añádelos explícitamente a las listas permitidas de las tres funciones antes de publicar.
+
+
+## Corrección de compras por animal
+
+- Los animales normales bloqueados se cobran a US$1.00.
+- Los animales de la categoría Legendarios se cobran a US$3.00.
+- La verificación del precio se realiza en el servidor, no se confía en el precio enviado por el navegador.
+
+## Importante sobre anuncios
+
+El proyecto no incluye todavía un SDK/red de anuncios real. `window.__adsShow` debe conectarse a una red de anuncios compatible y llamar al callback de recompensa solo cuando el proveedor confirme que el anuncio recompensado se completó. Sin esa integración, no se debe presentar una simulación como si fuera un anuncio real.
