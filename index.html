@@ -718,7 +718,7 @@ const ANIMALS={};
 ].forEach(([k,g,e,n,h,pn,pd,fs,cd,o])=>{ANIMALS[k]=Object.assign({e,n,g,h,pn,pd,cd,fx:fs.split(',').map(x=>{const[a,b]=x.split(':');return[a,...(b?b.split('/').map(Number):[])]})},o||{})});
 const AKEYS=Object.keys(ANIMALS);
 const START=['cobra','pulpo','anguila','camaleon','escorpion','tiburon','dragon'];
-AKEYS.forEach(k=>{const A=ANIMALS[k];A.free=START.slice(0,4).includes(k);A.tier=A.free?'free':(A.g==='leg'||A.g==='exo')?'leg':'std';A.pro=!A.free});
+AKEYS.forEach(k=>{const A=ANIMALS[k];A.free=START.slice(0,4).includes(k);A.tier=A.free?'free':A.g==='leg'?'leg':'std';A.pro=!A.free});
 const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','Duna','Bruno','Luna','Sol','Max','Tana','Kiko','Nube','Rocco','Mica','Gato','Flor','Toro','Zorro','Pipa','Lola','Vito','Coco','Nina','Rufo','Bola','Tuco','Yara','Cheto','Mimi','Ñoño','Pancho','Lupe','Taco','Jazz','Dino'];
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -823,7 +823,7 @@ const SALT='serpiente-arena-2026';
 function hc(s){let h=5381;for(const ch of s)h=((h<<5)+h+ch.charCodeAt(0))>>>0;return h.toString(36).toUpperCase()}
 let unl=[],adUnl=[],verifiedPurchases=[];
 try{unl=JSON.parse(localStorage.getItem('sa_unl')||'[]')}catch(e){}
-const owned=k=>!ANIMALS[k].pro||verifiedPurchases.includes(k)||adUnl.includes(k);
+const owned=k=>!ANIMALS[k].pro||unl.includes('todos')||unl.includes(k)||unl.includes('g:'+ANIMALS[k].g)||verifiedPurchases.includes(k)||adUnl.includes(k);
 function redeem(code){
   code=code.trim().toUpperCase();let ok=false;
   const add=x=>{if(!unl.includes(x))unl.push(x);ok=true};
@@ -1431,8 +1431,9 @@ async function restoreEntitlements(){
 }
 function payNow(){
   const k=skin,A=ANIMALS[k];
-  if(!A||A.tier!=='leg'){ $('lm').textContent='Solo las serpientes legendarias se pueden comprar aquí.';return; }
-  $('ppt').textContent=A.e+' '+A.n+' · US$3.00';$('ppm').textContent='';$('pp').style.display='flex';
+  if(!A||A.tier==='free'){ $('lm').textContent='Este animal ya es gratuito; elige un personaje bloqueado para comprarlo.';return; }
+  const amount=A.tier==='leg'?'3.00':'1.00';
+  $('ppt').textContent=A.e+' '+A.n+' · US$'+amount;$('ppm').textContent='';$('pp').style.display='flex';
   const draw=()=>{$('ppb').innerHTML='';paypal.Buttons({
     createOrder:()=>fetch('/api/paypal/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.id)throw new Error(d.error||'No se pudo crear la orden');return d.id}),
     onApprove:(data)=>fetch('/api/paypal/capture-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID,animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.token)throw new Error(d.error||'No se pudo verificar el pago');let tokens=[];try{tokens=JSON.parse(localStorage.getItem('sa_paytokens')||'[]')}catch(e){}if(!tokens.includes(d.token))tokens.push(d.token);try{localStorage.setItem('sa_paytokens',JSON.stringify(tokens))}catch(e){}if(!verifiedPurchases.includes(k))verifiedPurchases.push(k);$('pp').style.display='none';build();toast('¡Compra confirmada! '+A.n+' desbloqueado',3000)}).catch(e=>{$('ppm').textContent=e.message||'No se pudo verificar el pago. Contacta con soporte si PayPal ya te cobró.'}),
