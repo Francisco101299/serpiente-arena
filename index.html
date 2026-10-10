@@ -723,6 +723,7 @@ const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rad=s=>7+Math.min(70,Math.sqrt(s.mass)*.8);
+const gf=s=>Math.max(.25,1/(1+s.mass/1200));
 let rvLeft=0,mapOn=false,foodT=0,mf=0,paused=false,snakes=[],orbs=[],items=[],me=null,state='menu',cam={x:0,y:0},z=1,best=0,shake=0,skin='cobra',inks=[],fxs=[],traps=[],eatT=0,lbT=0,itT=0,keys={l:0,r:0};
 try{best=+localStorage.getItem('sa_best')||0}catch(e){}
 const mouse={x:0,y:0,has:false};
@@ -834,7 +835,7 @@ function redeem(code){
 }
 function eff(s){return s.freeB>0||(s.boost&&!s.cool&&s.st>0)}
 function step(s,dt){
-  const tr=(s.stun>0?0:(s.bot?4.2:8/(1+(rad(s)-10)*.025)))*(s.agile>0?2.6:1);
+  const tr=(s.stun>0?0:(s.bot?4.2:8*(.2+.8*Math.pow(Math.max(0,78-rad(s))/70,2))))*(s.agile>0?2.6:1);
   const tt=s.conf>0?s.a-ad(s.ta,s.a):s.ta;
   s.a+=Math.max(-tr*dt,Math.min(tr*dt,ad(tt,s.a)));
   if(s.st<=0)s.cool=true;else if(s.cool&&s.st>25)s.cool=false;
@@ -844,6 +845,7 @@ function step(s,dt){
   if(s.dash>0)sp=380;
   if(s.stun>0)sp*=.35;
   if(s.slow>0)sp*=.5;
+  sp*=1+Math.min(.12,Math.max(0,rad(s)-10)*.0018);
   const g=s.segs,h=g[0];
   h.x+=Math.cos(s.a)*sp*dt;h.y+=Math.sin(s.a)*sp*dt;
   const gs=Math.max(SP,rad(s)*.25);
@@ -932,7 +934,7 @@ function update(dt){
     const h=s.segs[0],er=rad(s)+10,mr=s.magnet>0?s.mr:0;
     for(let j=orbs.length-1;j>=0;j--){
       const o=orbs[j],dx=h.x-o.x,dy=h.y-o.y,d2=dx*dx+dy*dy;
-      if(d2<er*er){s.mass+=o.v;if(s===me&&eatT<=0){sfx('eat');eatT=.06}orbs[j]=orbs[orbs.length-1];orbs.pop()}
+      if(d2<er*er){s.mass+=o.v*gf(s);if(s===me&&eatT<=0){sfx('eat');eatT=.06}orbs[j]=orbs[orbs.length-1];orbs.pop()}
       else if(mr&&d2<mr*mr){const d=Math.sqrt(d2);o.x+=dx/d*320*dt;o.y+=dy/d*320*dt}
     }
     for(let j=items.length-1;j>=0;j--){
@@ -1099,7 +1101,7 @@ function ring(s,r,c){fx(s.segs[0].x,s.segs[0].y,r,c)}
 const FXS={
   rev(s){s.segs.reverse();const g=s.segs;s.a=Math.atan2(g[0].y-g[1].y,g[0].x-g[1].x);s.ta=s.a;s.shield=Math.max(s.shield,.8);ring(s,70,s.c1)},
   cloak(s,d){s.cloak=d},
-  vacuum(s,r){const h=s.segs[0];for(let j=orbs.length-1;j>=0;j--){const o=orbs[j];if(Math.hypot(o.x-h.x,o.y-h.y)<r){s.mass+=o.v;orbs[j]=orbs[orbs.length-1];orbs.pop()}}ring(s,r,'#7dff9a')},
+  vacuum(s,r){const h=s.segs[0];for(let j=orbs.length-1;j>=0;j--){const o=orbs[j];if(Math.hypot(o.x-h.x,o.y-h.y)<r){s.mass+=o.v*gf(s);orbs[j]=orbs[orbs.length-1];orbs.pop()}}ring(s,r,'#7dff9a')},
   push(s,r,f){const h=s.segs[0];nearOf(s,r,o=>{const q=o.segs[0],a=Math.atan2(q.y-h.y,q.x-h.x);shift(o,Math.cos(a)*f,Math.sin(a)*f)});ring(s,r,'#ffb347')},
   confuse(s,r,d){nearOf(s,r,o=>{o.conf=d});ring(s,r,'#c58bff')},
   grow(s,m){s.mass+=m;ring(s,90,'#7dff9a')},
@@ -1268,8 +1270,8 @@ function loop(t){
     const h=f.segs[0];
     cam.x+=(h.x-cam.x)*Math.min(1,dt*8);cam.y+=(h.y-cam.y)*Math.min(1,dt*8);
     const base=Math.max(.75,Math.min(1.2,Math.min(W,H)/620));
-    const tz=base/(1+(rad(f)-10)*.03);
-    z+=(tz-z)*Math.min(1,dt*3);
+    const tz=base*(.55+.45/Math.max(1,(rad(f)-7)/6));
+    z+=(tz-z)*Math.min(1,dt*1.2);
   }
   if(!mq.matches)draw(t);
 }
