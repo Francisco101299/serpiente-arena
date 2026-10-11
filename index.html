@@ -671,6 +671,15 @@ window["GD_OPTIONS"] = {
           if (typeof AC !== "undefined" && AC && AC.state === "running") AC.suspend();
         }
         break;
+      case "SDK_REWARDED_WATCH_COMPLETE":
+        // Entregar la recompensa únicamente cuando GameDistribution confirma
+        // que el usuario terminó de ver el anuncio recompensado.
+        if (typeof window.__ssRewardCallback === "function") {
+          var reward = window.__ssRewardCallback;
+          window.__ssRewardCallback = null;
+          reward();
+        }
+        break;
       case "SDK_GAME_START":
         if (typeof muted !== "undefined") {
           muted = !!window.__gdWasMuted;
@@ -1358,7 +1367,7 @@ function pick(k){
   $('chips').innerHTML=`<span class="chip">${GROUPS[A.g]}</span><span class="chip${A.tier==='free'?'':' p'}">${A.tier==='free'?'Gratis':ok?'✔ Desbloqueado':tl[A.tier]}</span><span class="chip">⏱ Espera ${A.cd} s</span>`;
   $('pd').innerHTML=`<b>${A.pn}</b><br>${A.pd}<small>Cómo usarlo: ${hows(A)}</small>`;
   $('go').disabled=!ok;$('lock').style.display=ok?'none':'block';$('lm').textContent='';
-  $('ad').style.display=A.tier==='std'&&(!PROD||ADS.show)?'block':'none';
+  $('ad').style.display=A.tier==='std'?'block':'none';
   $('buy').textContent=`Comprar · ${PRICE[A.tier]||''} (PayPal o tarjeta)`+(A.tier==='leg'?' · solo compra':'');
 }
 function fill(){
@@ -1382,17 +1391,41 @@ function build(){
 build();
 if(matchMedia('(pointer:coarse)').matches)document.querySelector('.card .hint').textContent='Arrastra el dedo en cualquier parte para girar. ⚡ acelera gastando energía; el botón del animal usa tu poder. Recoge 🛡 y 🧲.';
 $('go').onclick=start;
- // ADS.show: función de tu red de anuncios (recibe un callback al terminar); si es null se usa el espacio de prueba
+ // Anuncios recompensados reales de GameDistribution.
 let adIv=null;
-function watchAd(k){if(PROD&&!ADS.show)return;
-  const done=()=>{adUnl.push(k);build();$('pd').insertAdjacentHTML('afterbegin','<b>¡Desbloqueado hasta cerrar la app!</b><br>')};
-  if(ADS.show)return ADS.show(done);
-  const ov=$('adov'),b=$('adx');let n=ADS.secs;ov.style.display='flex';b.disabled=true;
-  const upd=()=>{b.textContent=n>0?`Espera ${n} s`:'Reclamar'};upd();
-  clearInterval(adIv);
-  adIv=setInterval(()=>{n--;upd();if(n<=0){clearInterval(adIv);b.disabled=false}},1000);
-  b.onclick=()=>{ov.style.display='none';done()};
-  $('adc').onclick=()=>{clearInterval(adIv);ov.style.display='none'};
+function showGDRewarded(onReward){
+  if (typeof window.gdsdk === 'undefined' || typeof window.gdsdk.showAd !== 'function') {
+    $('lm').textContent='El anuncio todavía no está disponible. Inténtalo de nuevo en unos segundos.';
+    return false;
+  }
+  if (window.__ssRewardCallback) {
+    $('lm').textContent='Ya hay un anuncio en proceso. Espera a que termine.';
+    return false;
+  }
+  window.__ssRewardCallback = onReward;
+  try {
+    const result = window.gdsdk.showAd('rewarded');
+    if (result && typeof result.catch === 'function') {
+      result.catch(function(){
+        // Si el SDK rechaza la solicitud, no se entrega la recompensa.
+        window.__ssRewardCallback = null;
+        $('lm').textContent='No se pudo mostrar el anuncio. Inténtalo más tarde.';
+      });
+    }
+    return true;
+  } catch (e) {
+    window.__ssRewardCallback = null;
+    $('lm').textContent='No se pudo mostrar el anuncio. Inténtalo más tarde.';
+    return false;
+  }
+}
+function watchAd(k){
+  $('lm').textContent='';
+  showGDRewarded(()=>{
+    if (!adUnl.includes(k)) adUnl.push(k);
+    build();
+    $('pd').insertAdjacentHTML('afterbegin','<b>¡Desbloqueado hasta cerrar la app!</b><br>');
+  });
 }
 $('ad').onclick=()=>watchAd(skin);
 $('buy').onclick=()=>{
@@ -1435,7 +1468,7 @@ try{mapOn=localStorage.getItem('sa_map')==='1'}catch(e){}
 function applyMap(){document.body.classList.toggle('mp',mapOn)}
 $('mpb').onclick=()=>{mapOn=!mapOn;try{localStorage.setItem('sa_map',mapOn?'1':'0')}catch(e){}applyMap()};
 applyMap();
-function showRevive(){if(PROD&&!ADS.show)return false;paused=true;$('rvn').textContent=rvLeft;$('rv').style.display='flex';return true}
+function showRevive(){paused=true;$('rvn').textContent=rvLeft;$('rv').style.display='flex';return true}
 function doRevive(){
   rvLeft--;$('rv').style.display='none';
   const h=me.segs[0],hx=h.x,hy=h.y,m=Math.hypot(hx,hy);
@@ -1443,7 +1476,7 @@ function doRevive(){
   me.alive=true;me.shield=Math.max(me.shield||0,4);me.boost=false;
   cam.x=me.segs[0].x;cam.y=me.segs[0].y;paused=false;last=performance.now();
 }
-$('rva').onclick=()=>{if(ADS.show)ADS.show(doRevive);else if(!PROD)doRevive()};
+$('rva').onclick=()=>{showGDRewarded(doRevive)};
 $('rvr').onclick=()=>{$('rv').style.display='none';rvLeft=0;paused=false;end()};
 const PAYPAL_ID='PON_AQUI_TU_CLIENT_ID_DE_PAYPAL';
 function payNow(){
