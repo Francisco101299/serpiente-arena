@@ -639,7 +639,7 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 <canvas id="pv" width="240" height="64"></canvas>
 <div id="chips"></div>
 <p id="pd"></p>
-<div id="lock" style="display:none"><button class="sm" id="ad" style="width:100%;margin-bottom:6px">📺 Ver anuncio y desbloquear hasta cerrar la app</button><button class="sm buy" id="buy">Comprar (PayPal o tarjeta)</button><input id="cd" placeholder="Código de desbloqueo" autocomplete="off"><button class="sm" id="rd">Canjear</button><p id="lm"></p></div>
+<div id="lock" style="display:none"><button class="sm" id="ad" style="width:100%;margin-bottom:6px">📺 Ver anuncio y desbloquear hasta cerrar la app</button><button class="sm buy" id="buy">Comprar (PayPal o tarjeta)</button><p id="lm"></p></div>
 <p class="hint">Mueve el mouse o arrastra el dedo para girar. Mantén clic, espacio o ⚡ para acelerar: gasta energía, no tamaño. Usa tu poder con el botón del animal o la tecla E. Recoge 🛡 escudos y 🧲 imanes.</p>
 </div><button id="go">Jugar</button>
 </div></div></div>
@@ -654,6 +654,43 @@ body.sl #boost,body.sl #pwr{left:calc(max(12px,env(safe-area-inset-left)) + 4px)
 <button class="sm" id="spb" style="margin-top:10px">Volver</button></div>
 <div id="pov"><div class="card"><h1>Pausa</h1><p>El juego está detenido.</p><button class="sm sdb" style="margin-bottom:8px;width:100%"></button><button class="sm buy" id="pgo">Continuar</button></div></div>
 <div id="rot"><div>📱<p>Gira el teléfono en horizontal para jugar</p></div></div>
+<script>
+// GameDistribution HTML5 SDK
+window["GD_OPTIONS"] = {
+  "gameId": "961beadc2d9a423ba07bbc4fce70b34c",
+  "onEvent": function(event) {
+    switch (event.name) {
+      case "SDK_GAME_PAUSE":
+        // Pause gameplay and silence audio while an ad is shown.
+        window.__gdWasMuted = (typeof muted !== "undefined") ? muted : false;
+        if (typeof pause === "function") pause();
+        if (typeof muted !== "undefined") {
+          muted = true;
+          const soundButton = document.getElementById("snd");
+          if (soundButton) soundButton.textContent = "🔇";
+          if (typeof AC !== "undefined" && AC && AC.state === "running") AC.suspend();
+        }
+        break;
+      case "SDK_GAME_START":
+        if (typeof muted !== "undefined") {
+          muted = !!window.__gdWasMuted;
+          const soundButton = document.getElementById("snd");
+          if (soundButton) soundButton.textContent = muted ? "🔇" : "🔊";
+        }
+        if (typeof unpause === "function") unpause();
+        break;
+    }
+  }
+};
+(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://html5.api.gamedistribution.com/main.min.js";
+  fjs.parentNode.insertBefore(js, fjs);
+})(document, "script", "gamedistribution-jssdk");
+</script>
 <script>
 const $=id=>document.getElementById(id);
 const cv=$('g'),ctx=cv.getContext('2d',{alpha:false}),mmc=$('mm').getContext('2d');
@@ -718,7 +755,7 @@ const ANIMALS={};
 ].forEach(([k,g,e,n,h,pn,pd,fs,cd,o])=>{ANIMALS[k]=Object.assign({e,n,g,h,pn,pd,cd,fx:fs.split(',').map(x=>{const[a,b]=x.split(':');return[a,...(b?b.split('/').map(Number):[])]})},o||{})});
 const AKEYS=Object.keys(ANIMALS);
 const START=['cobra','pulpo','anguila','camaleon','escorpion','tiburon','dragon'];
-AKEYS.forEach(k=>{const A=ANIMALS[k];A.free=START.slice(0,4).includes(k);A.tier=A.free?'free':A.g==='leg'?'leg':'std';A.pro=!A.free});
+AKEYS.forEach(k=>{const A=ANIMALS[k];A.free=START.slice(0,4).includes(k);A.tier=A.free?'free':(A.g==='leg'||A.g==='exo')?'leg':'std';A.pro=!A.free});
 const NAMES=['Kora','Mambo','Lía','Tito','Zeta','Nuri','Pepe','Rayo','Chispa','Duna','Bruno','Luna','Sol','Max','Tana','Kiko','Nube','Rocco','Mica','Gato','Flor','Toro','Zorro','Pipa','Lola','Vito','Coco','Nina','Rufo','Bola','Tuco','Yara','Cheto','Mimi','Ñoño','Pancho','Lupe','Taco','Jazz','Dino'];
 const rnd=(a,b)=>a+Math.random()*(b-a),ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -821,18 +858,9 @@ const SHOP={std:'',leg:''}; // enlace de pago por nivel; puedes añadir uno por 
 const PRICE={std:'US$1',leg:'US$3'};
 const SALT='serpiente-arena-2026';
 function hc(s){let h=5381;for(const ch of s)h=((h<<5)+h+ch.charCodeAt(0))>>>0;return h.toString(36).toUpperCase()}
-let unl=[],adUnl=[],verifiedPurchases=[];
+let unl=[],adUnl=[];
 try{unl=JSON.parse(localStorage.getItem('sa_unl')||'[]')}catch(e){}
-const owned=k=>!ANIMALS[k].pro||unl.includes('todos')||unl.includes(k)||unl.includes('g:'+ANIMALS[k].g)||verifiedPurchases.includes(k)||adUnl.includes(k);
-function redeem(code){
-  code=code.trim().toUpperCase();let ok=false;
-  const add=x=>{if(!unl.includes(x))unl.push(x);ok=true};
-  if(hc(SALT+'todos')===code)add('todos');
-  for(const g in GROUPS)if(hc(SALT+'g:'+g)===code)add('g:'+g);
-  for(const k of AKEYS)if(ANIMALS[k].pro&&hc(SALT+k)===code)add(k);
-  if(ok){try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}}
-  return ok;
-}
+const owned=k=>!ANIMALS[k].pro||unl.includes(k)||unl.includes('todos')||unl.includes('g:'+ANIMALS[k].g)||adUnl.includes(k);
 function eff(s){return s.freeB>0||(s.boost&&!s.cool&&s.st>0)}
 function step(s,dt){
   const tr=(s.stun>0?0:(s.bot?4.2:8*(.2+.8*Math.pow(Math.max(0,78-rad(s))/70,2))))*(s.agile>0?2.6:1);
@@ -1302,7 +1330,7 @@ function joyEnd(e){if(joy&&e.pointerId===joy.id){joy=null;jel.style.display='non
 addEventListener('pointerup',joyEnd);addEventListener('pointercancel',joyEnd);
 addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&me)me.boost=false});
 addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT'){if(e.key==='Enter'){e.target.id==='nm'?start():$('rd').click()}return}
+  if(e.target.tagName==='INPUT'){if(e.key==='Enter'&&e.target.id==='nm')start();return}
   if(e.key===' '&&me){me.boost=true;e.preventDefault()}
   if((e.key==='e'||e.key==='q'||e.key==='Shift')&&me)usePower(me);
   if(e.key==='ArrowLeft'||e.key==='a')keys.l=1;
@@ -1369,13 +1397,9 @@ function watchAd(k){if(PROD&&!ADS.show)return;
 $('ad').onclick=()=>watchAd(skin);
 $('buy').onclick=()=>{
   const u=SHOP[skin]||SHOP[ANIMALS[skin].tier];if(u)window.open(u,'_blank','noopener');
-  else $('lm').textContent='El pago aún no está activo. Si ya tienes un código, escríbelo abajo.';
+  else $('lm').textContent='El pago aún no está activo. Inténtalo más tarde.';
 };
 $('buy').onclick=payNow;
-$('rd').onclick=()=>{
-  const ok=redeem($('cd').value);$('cd').value='';build();
-  if(ok)$('pd').insertAdjacentHTML('afterbegin','<b>¡Desbloqueado!</b><br>');else $('lm').textContent='Código no válido';
-};
 $('snd').textContent=muted?'🔇':'🔊';
 $('mus').style.opacity=musOn?1:.4;
 $('mus').onclick=()=>{musOn=!musOn;try{localStorage.setItem('sa_mus',musOn?'1':'0')}catch(e){}$('mus').style.opacity=musOn?1:.4;au()};
@@ -1421,33 +1445,26 @@ function doRevive(){
 }
 $('rva').onclick=()=>{if(ADS.show)ADS.show(doRevive);else if(!PROD)doRevive()};
 $('rvr').onclick=()=>{$('rv').style.display='none';rvLeft=0;paused=false;end()};
-const PAYPAL_ID='BAAPQuFS9YbVvDWlrQ1HcgeGrUQo6oyMslnNxxPsTAP834VOyZ_QcigQqsGNZTxIqr1fq4s4OjGC5xNatk';
-let ppScriptLoading=false;
-async function restoreEntitlements(){
-  let tokens=[];try{tokens=JSON.parse(localStorage.getItem('sa_paytokens')||'[]')}catch(e){}
-  const valid=[];
-  for(const token of tokens){try{const r=await fetch('/api/paypal/verify-entitlement',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});if(r.ok){const d=await r.json();if(d.valid&&typeof d.animal==='string'&&!valid.includes(d.animal))valid.push(d.animal)}}catch(e){}}
-  verifiedPurchases=valid;
-}
+const PAYPAL_ID='PON_AQUI_TU_CLIENT_ID_DE_PAYPAL';
 function payNow(){
-  const k=skin,A=ANIMALS[k];
-  if(!A||A.tier==='free'){ $('lm').textContent='Este animal ya es gratuito; elige un personaje bloqueado para comprarlo.';return; }
-  const amount=A.tier==='leg'?'3.00':'1.00';
-  $('ppt').textContent=A.e+' '+A.n+' · US$'+amount;$('ppm').textContent='';$('pp').style.display='flex';
+  const k=skin,A=ANIMALS[k],pr=PRICE[A.tier];
+  if(!pr||PAYPAL_ID.indexOf('PON_')===0){$('lm').textContent='El pago aún no está activo.';return}
+  const val=parseFloat(pr.replace(/[^0-9.]/g,'')).toFixed(2);
+  $('ppt').textContent=A.e+' '+A.n+' · '+pr;$('ppm').textContent='';$('pp').style.display='flex';
   const draw=()=>{$('ppb').innerHTML='';paypal.Buttons({
-    createOrder:()=>fetch('/api/paypal/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.id)throw new Error(d.error||'No se pudo crear la orden');return d.id}),
-    onApprove:(data)=>fetch('/api/paypal/capture-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID,animal:k})}).then(async r=>{const d=await r.json();if(!r.ok||!d.token)throw new Error(d.error||'No se pudo verificar el pago');let tokens=[];try{tokens=JSON.parse(localStorage.getItem('sa_paytokens')||'[]')}catch(e){}if(!tokens.includes(d.token))tokens.push(d.token);try{localStorage.setItem('sa_paytokens',JSON.stringify(tokens))}catch(e){}if(!verifiedPurchases.includes(k))verifiedPurchases.push(k);$('pp').style.display='none';build();toast('¡Compra confirmada! '+A.n+' desbloqueado',3000)}).catch(e=>{$('ppm').textContent=e.message||'No se pudo verificar el pago. Contacta con soporte si PayPal ya te cobró.'}),
-    onCancel:()=>{$('ppm').textContent='Compra cancelada. No se realizó el desbloqueo.'},
+    createOrder:(d,a)=>a.order.create({purchase_units:[{description:'Super Serpientes: '+A.n,amount:{currency_code:'USD',value:val}}]}),
+    onApprove:(d,a)=>a.order.capture().then(()=>{if(!unl.includes(k))unl.push(k);try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}$('pp').style.display='none';build();toast('¡Compra lista! '+A.n+' desbloqueado',3000)}),
     onError:()=>{$('ppm').textContent='No se pudo completar el pago. Intenta de nuevo.'}
   }).render('#ppb')};
   if(window.paypal)return draw();
-  if(ppScriptLoading)return;
-  ppScriptLoading=true;const sc=document.createElement('script');sc.src='https://www.paypal.com/sdk/js?client-id='+encodeURIComponent(PAYPAL_ID)+'&currency=USD&components=buttons';
-  sc.onload=()=>{ppScriptLoading=false;draw()};sc.onerror=()=>{ppScriptLoading=false;$('ppm').textContent='No se pudo cargar PayPal. Revisa tu conexión.'};document.head.appendChild(sc);
+  const sc=document.createElement('script');sc.src='https://www.paypal.com/sdk/js?client-id='+PAYPAL_ID+'&currency=USD&components=buttons';
+  sc.onload=draw;sc.onerror=()=>{$('ppm').textContent='No se pudo cargar el pago. Revisa tu conexión.'};document.head.appendChild(sc);
 }
 $('ppx').onclick=()=>{$('pp').style.display='none'};
-/* Se eliminó el código temporal que desbloqueaba todos los animales. */
+/* Se elimina el desbloqueo de prueba antes de publicar. */
+unl=unl.filter(x=>x!=='todos');
+try{localStorage.setItem('sa_unl',JSON.stringify(unl))}catch(e){}
 $('pz').onclick=pause;$('pgo').onclick=unpause;
-restoreEntitlements().finally(()=>{reset();requestAnimationFrame(loop)});
+reset();requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
